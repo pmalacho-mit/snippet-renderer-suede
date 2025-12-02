@@ -1,4 +1,4 @@
-# Snippet-renderer-suede
+# snippet-renderer-suede
 
 This repo is a [suede dependency](https://github.com/pmalacho-mit/suede). 
 
