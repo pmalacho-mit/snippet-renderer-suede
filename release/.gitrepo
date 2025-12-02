@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/pmalacho-mit/snippet-renderer-suede
+	branch = release
+	commit = 454600819934689f0c2984702fb6a9dcd1ac57d8
+	parent = 9f464a1f9adb2fd6a0f7864fd95b2d40d06d0d83
+	method = merge
+	cmdver = 0.4.9
