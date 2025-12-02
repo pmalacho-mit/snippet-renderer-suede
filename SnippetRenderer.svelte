@@ -8,7 +8,6 @@
     Maybe,
     RequiredKeys,
     SingleOrArray,
-    WithValue,
   } from "./utils";
 
   export type RenderableSnippet<
@@ -176,7 +175,10 @@
     type Multi = Maybe<RenderableSnippet<any>[]>;
     type Return = Renderable<K, K extends "multi" ? Multi : Single>;
 
-    const value = initial?.(renderableSnippet);
+    const value =
+      kind === "multi" && initial === renderable.required
+        ? []
+        : initial?.(renderableSnippet);
     let state = $state(kind === "multi" ? valueFromMulti(value) : value);
     switch (kind) {
       case "single":
@@ -218,7 +220,7 @@
     }
   }
 
-  type ExtractRenderableSnippets<T> = MakeOptionalIfNullable<{
+  export type ExtractRenderableSnippets<T> = MakeOptionalIfNullable<{
     [k in keyof T as T[k] extends Renderable<any, any>
       ? k
       : never]: T[k] extends Renderable<infer K, infer T>
@@ -242,7 +244,7 @@
     renderables: Renderables<T>;
   }>;
 
-  type NoRequiredRenderables<T> =
+  export type NoRequiredRenderables<T> =
     RequiredKeys<ExtractRenderableSnippets<T>> extends never ? true : false;
 
   export type InitialRenderables<T> =
@@ -281,25 +283,17 @@
     }
   );
 
-  export type RenderableContent = RenderableSnippet<any> | Snippet<[]> | string;
+  export type RenderableContent =
+    | RenderableSnippet<any>
+    | Snippet<[]>
+    | string
+    | RenderableContent[];
 
-  export { text, dynamicText, flexibleRenderer };
+  export { renderer };
 
   export type RenderSnippetWithProp<T> = (
     prop: T
   ) => RenderSnippet<RenderableSnippet<T>>;
-
-  const renderText: RenderSnippetWithProp<string> = (content) => (render) =>
-    render(text, content);
-
-  const renderDynamicText: RenderSnippetWithProp<WithValue<string>> =
-    (content) => (render) =>
-      render(dynamicText, content);
-
-  export const render = {
-    text: renderText,
-    dynamicText: renderDynamicText,
-  };
 </script>
 
 <script lang="ts" generics="TSnippetProp extends unknown | undefined">
@@ -314,22 +308,21 @@
 {/if}
 
 {#snippet requiredPlaceholder()}
+  {@const _ = console.error(
+    "A required snippet was rendered without providing the necessary snippet."
+  )}
   Error: Required snippet not provided
 {/snippet}
 
-{#snippet text(content: string)}
-  {content}
-{/snippet}
-
-{#snippet dynamicText(content: WithValue<string>)}
-  {content.value}
-{/snippet}
-
-{#snippet flexibleRenderer(content: RenderableContent)}
+{#snippet renderer(content: RenderableContent)}
   {#if typeof content === "string"}
     {content}
   {:else if typeof content === "function"}
     {@render content()}
+  {:else if Array.isArray(content)}
+    {#each content as item}
+      {@render renderer(item)}
+    {/each}
   {:else}
     <Self {...content} />
   {/if}
