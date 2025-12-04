@@ -46,14 +46,25 @@
     snippet: TSnippet,
     prop: ExtractSnippetArgs<TSnippet>[0]
   ): RenderableSnippet<ExtractSnippetArgs<TSnippet>[0]>;
+  /**
+   * Convenience overload to create a renderable snippet from raw HTML content.
+   * @overload
+   * @param snippet
+   * @param prop
+   */
+  export function renderableSnippet(html: string): RenderableSnippet<any>;
   /** Implementation */
   export function renderableSnippet<TSnippet extends Snippet<any>>(
-    snippet: TSnippet,
+    snippet: TSnippet | string,
     prop?: ExtractSnippetArgs<TSnippet> extends []
       ? undefined
       : ExtractSnippetArgs<TSnippet>[0]
   ): RenderableSnippet<any> {
-    return prop === undefined ? { snippet } : { snippet, prop };
+    return typeof snippet === "string"
+      ? { snippet: html, prop: snippet }
+      : prop === undefined
+        ? { snippet }
+        : { snippet, prop };
   }
 
   export type RenderSnippet<T = ReturnType<typeof renderableSnippet>> = (
@@ -76,7 +87,9 @@
         /**
          * Set the current value of the renderable. This will replace the current value with the new value.
          *
+         *
          * @param get A callback that accepts a `render` function as an argument, which can then be used to render a snippet in a type-safe manner.
+         * For convenience, when setting a multi renderable, you can return either an array of values or a single value (which will then be automatically wrapped into an array).
          *
          * @example
          * ```ts
@@ -115,7 +128,7 @@
         set: (
           get: (render: typeof renderableSnippet) => T | UndefinedIfMaybe<T>
         ) => void;
-      } & (T extends Maybe<any> ? { unset: () => void } : {}));
+      } & (undefined extends T ? { unset: () => void } : {}));
 
   export type OptionalRenderable = Renderable<
     "single",
@@ -137,7 +150,7 @@
     kind: "single"
   ): Expand<Renderable<"single", Maybe<T>>>;
   /**
-   * Create a `"single"` renderable that is optional (meaning the underlying`current` property can be `undefined`)
+   * Create a `"single"` renderable that cis required (meaning the underlying`current` property will always have a value)
    * @overload
    * @param kind specify that this is a `"single"` renderable
    * @param initial A callback that returns the initial value of the renderable
@@ -155,7 +168,8 @@
     kind: "multi"
   ): Expand<Renderable<"multi", Maybe<T[]>>>;
   /**
-   * Create a `"multi"` renderable that is optional (meaning the underlying`current` property can be `undefined`)
+   * Create a `"multi"` renderable that is required
+   * (meaning the underlying`current` property will always have a value, and is initialized to an empty array)
    * @overload
    * @param kind specify that this is a `"multi"` renderable
    * @param initial A callback that returns the initial value of the renderable
@@ -165,15 +179,24 @@
     initial: (render: typeof renderableSnippet) => SingleOrArray<T>
   ): Expand<Renderable<"multi", T[]>>;
   /** Implementation */
-  function _renderable<K extends Kind>(
-    kind: K,
-    initial?: (
-      render: typeof renderableSnippet
-    ) => SingleOrArray<ReturnType<typeof renderableSnippet>>
-  ) {
+  function _renderable<
+    K extends Kind,
+    Initial extends
+      | ((
+          render: typeof renderableSnippet
+        ) => SingleOrArray<ReturnType<typeof renderableSnippet>>)
+      | undefined,
+  >(kind: K, initial?: Initial) {
     type Single = Maybe<RenderableSnippet<any>>;
     type Multi = Maybe<RenderableSnippet<any>[]>;
-    type Return = Renderable<K, K extends "multi" ? Multi : Single>;
+    type Return = Renderable<
+      K,
+      K extends "multi"
+        ? Initial extends undefined
+          ? RenderableSnippet<any>[]
+          : Multi
+        : Single
+    >;
 
     const value =
       kind === "multi" && initial === renderable.required
@@ -300,6 +323,10 @@
   import Self from "./SnippetRenderer.svelte";
   let { snippet, prop }: RenderableSnippet<TSnippetProp> = $props();
 </script>
+
+{#snippet html(content: string)}
+  {@html content}
+{/snippet}
 
 {#if noProp(snippet, prop)}
   {@render snippet()}
