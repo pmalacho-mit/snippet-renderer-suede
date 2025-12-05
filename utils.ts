@@ -105,6 +105,8 @@ export type RequiredKeys<T> = {
  */
 export type Maybe<T> = T | undefined;
 
+export type IfMaybe<T, If, Else> = undefined extends T ? If : Else;
+
 /**
  * Represents either a single value or an array of values of the same type.
  *

@@ -3,6 +3,7 @@ export {
   renderable,
   renderer,
   type InitialRenderables,
+  type RenderableSnippet,
 } from "./SnippetRenderer.svelte";
 
 /**
