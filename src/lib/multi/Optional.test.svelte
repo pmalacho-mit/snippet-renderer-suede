@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Sweater } from "./sweater-vest-suede";
-  import MultiOptional, { Model } from "./MultiOptional.svelte";
+  import { Sweater } from "../sweater-vest-suede";
+  import MultiOptional, { Model } from "./Optional.svelte";
   import { untrack } from "svelte";
 </script>
 

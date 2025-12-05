@@ -1,5 +1,9 @@
 <script lang="ts" module>
-  import { renderable, renderer, type InitialRenderables } from "../../release";
+  import {
+    renderable,
+    renderer,
+    type InitialRenderables,
+  } from "../../../release";
 
   export class Model {
     /**

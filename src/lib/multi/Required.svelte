@@ -1,6 +1,9 @@
 <script lang="ts" module>
-  import { renderable, renderer, type InitialRenderables } from "../../release";
-  import type { ExtractRenderableEntries } from "../../release/SnippetRenderer.svelte";
+  import {
+    renderable,
+    renderer,
+    type InitialRenderables,
+  } from "../../../release";
 
   export class Model {
     /**

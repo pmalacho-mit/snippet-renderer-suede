@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Sweater } from "./sweater-vest-suede";
-  import SingleOptional, { Model } from "./SingleOptional.svelte";
+  import { Sweater } from "../sweater-vest-suede";
+  import SingleOptional, { Model } from "./Optional.svelte";
 </script>
 
 <Sweater
@@ -20,7 +20,7 @@
     {/snippet}
 
     <button onclick={() => item.set((render) => render("<em>Hello!</em>"))}>
-      Raw HTML
+      Raw html
     </button>
 
     <button onclick={() => item.set((render) => render(noProps))}>

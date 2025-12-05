@@ -4,7 +4,7 @@
     renderer,
     type RenderableSnippet,
     type InitialRenderables,
-  } from "../../release";
+  } from "../../../release";
 
   export class Model {
     items = renderable<{ title: string; renderable: RenderableSnippet }>(

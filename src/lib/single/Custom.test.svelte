@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Sweater } from "./sweater-vest-suede";
-  import SingleCustom, { Model } from "./SingleCustom.svelte";
+  import { Sweater } from "../sweater-vest-suede";
+  import SingleCustom, { Model } from "./Custom.svelte";
 </script>
 
 <Sweater

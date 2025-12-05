@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Sweater } from "./sweater-vest-suede";
-  import SingleRequired, { Model } from "./SingleRequired.svelte";
+  import { Sweater } from "../sweater-vest-suede";
+  import SingleRequired, { Model } from "./Required.svelte";
 </script>
 
 {#snippet withProps(name: string)}
