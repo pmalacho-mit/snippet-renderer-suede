@@ -45,9 +45,7 @@
       <button onclick={() => items.append((render) => render(withProps, 3))}>
         Add with props (cubed)
       </button>
-      <!-- 
       <button onclick={() => items.unset()}> Reset </button>
-      -->
     </div>
     <MultiOptional {model} />
   {/snippet}

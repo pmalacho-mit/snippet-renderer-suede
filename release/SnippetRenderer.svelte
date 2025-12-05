@@ -8,28 +8,22 @@
     Maybe,
     RequiredKeys,
     SingleOrArray,
+    IfMaybe,
   } from "./utils";
 
-  export type RenderableSnippet<
-    TSnippetProp extends unknown | undefined = unknown,
-  > = TSnippetProp extends undefined
-    ? { snippet: Snippet<[]>; prop?: never }
-    : { snippet: Snippet<[TSnippetProp]>; prop: TSnippetProp };
-
-  export type SnippetProp<T extends Snippet<any>> =
-    T extends Snippet<infer U>
-      ? U extends [infer first, ...any]
-        ? first
-        : never
-      : never;
-
-  const noProp = <TProp extends unknown | undefined>(
-    snippet: Snippet<[TProp]> | Snippet<[]>,
-    prop: TProp
-  ): snippet is Snippet<[]> => prop === undefined;
+  /**
+   * A record that includes a snippet and, if that snippet requires a prop,
+   * the prop to provide to it upon rendering.
+   *
+   * Ensures type safety when rendering snippets that may or may not require props.
+   */
+  export type RenderableSnippet<Prop extends unknown | undefined = any> =
+    Prop extends undefined
+      ? { snippet: Snippet<[]>; prop?: never }
+      : { snippet: Snippet<[Prop]>; prop: Prop };
 
   /**
-   *
+   * Create a renderable snippet from a snippet that does not require any props.
    * @overload
    * @param snippet
    */
@@ -37,7 +31,7 @@
     snippet: TSnippet
   ): RenderableSnippet<undefined>;
   /**
-   *
+   * Create a renderable snippet from a snippet that requires a prop.
    * @overload
    * @param snippet
    * @param prop
@@ -67,15 +61,8 @@
         : { snippet, prop };
   }
 
-  export type RenderSnippet<T = ReturnType<typeof renderableSnippet>> = (
-    render: typeof renderableSnippet
-  ) => T;
-
-  type Kind = "single" | "multi";
-  type UndefinedIfMaybe<T> = T extends Maybe<any> ? undefined : never;
-
   export type Renderable<
-    K extends Kind,
+    K extends "single" | "multi",
     T extends K extends "multi"
       ? Maybe<Record<string, any>[]>
       : Maybe<Record<string, any>>,
@@ -112,7 +99,7 @@
                   ? ArrayElement<Exclude<T, undefined>>
                   : any
               >
-            | UndefinedIfMaybe<T>
+            | IfMaybe<T, undefined, never>
         ) => void;
         append: (
           get: (
@@ -123,17 +110,20 @@
               : any
           >
         ) => void;
+        /**
+         * Unset the current value of the renderable,
+         * setting it to `undefined` for optional multi renderables,
+         * or to an empty array for required multi renderables.
+         */
+        unset: () => void;
       }
     : {
         set: (
-          get: (render: typeof renderableSnippet) => T | UndefinedIfMaybe<T>
+          get: (
+            render: typeof renderableSnippet
+          ) => T | IfMaybe<T, undefined, never>
         ) => void;
       } & (undefined extends T ? { unset: () => void } : {}));
-
-  export type OptionalRenderable = Renderable<
-    "single",
-    Maybe<RenderableSnippet<any>>
-  >;
 
   type Constraint = Record<string, any>;
   type Default = RenderableSnippet<any>;
@@ -179,30 +169,20 @@
     initial: (render: typeof renderableSnippet) => SingleOrArray<T>
   ): Expand<Renderable<"multi", T[]>>;
   /** Implementation */
-  function _renderable<
-    K extends Kind,
-    Initial extends
-      | ((
-          render: typeof renderableSnippet
-        ) => SingleOrArray<ReturnType<typeof renderableSnippet>>)
-      | undefined,
-  >(kind: K, initial?: Initial) {
+  function _renderable<K extends "single" | "multi">(
+    kind: K,
+    initial?: (
+      render: typeof renderableSnippet
+    ) => SingleOrArray<ReturnType<typeof renderableSnippet>>
+  ) {
     type Single = Maybe<RenderableSnippet<any>>;
     type Multi = Maybe<RenderableSnippet<any>[]>;
-    type Return = Renderable<
-      K,
-      K extends "multi"
-        ? Initial extends undefined
-          ? RenderableSnippet<any>[]
-          : Multi
-        : Single
-    >;
+    type Return = Renderable<K, K extends "multi" ? Multi : Single>;
 
-    const value =
-      kind === "multi" && initial === renderable.required
-        ? []
-        : initial?.(renderableSnippet);
+    const required = initial !== undefined;
+    const value = initial?.(renderableSnippet);
     let state = $state(kind === "multi" ? valueFromMulti(value) : value);
+
     switch (kind) {
       case "single":
         const single: Renderable<"single", Single> = {
@@ -214,7 +194,8 @@
             state = get(renderableSnippet);
           },
           unset: () => {
-            state = undefined;
+            if (!required) state = undefined;
+            else console.error("Cannot unset a required renderable");
           },
         };
         return single as unknown as Return;
@@ -238,44 +219,59 @@
                   value as RenderableSnippet<any>
                 );
           },
+          unset() {
+            state = required ? [] : undefined;
+          },
         };
         return multi as unknown as Return;
     }
   }
 
-  export type ExtractRenderableSnippets<T> = MakeOptionalIfNullable<{
-    [k in keyof T as T[k] extends Renderable<any, any>
-      ? k
-      : never]: T[k] extends Renderable<infer K, infer T>
+  /**
+   * When given a Renderable<_,_>, extracts the type of entry it contains
+   * (e.g. what it's value of `current` would be),
+   * with the addition that `multi` renderables are expanded to
+   * either a single item or an array of items.
+   *
+   * Optional renderables will have `undefined` included in the type.
+   */
+  export type ExtractRenderableEntry<MaybeRenderable> =
+    MaybeRenderable extends Renderable<infer K, infer T>
       ? K extends "single"
         ? T
-        : T extends (infer Item)[]
-          ? SingleOrArray<Item> | UndefinedIfMaybe<T>
-          : never
+        : undefined extends MaybeRenderable["current"]
+          ? T extends (infer Item)[]
+            ? Maybe<SingleOrArray<Item>>
+            : never
+          : T extends (infer Item)[]
+            ? SingleOrArray<Item>
+            : never
       : never;
+
+  export type ExtractRenderableEntries<T> = MakeOptionalIfNullable<{
+    [k in keyof T as T[k] extends Renderable<infer _, infer __>
+      ? k
+      : never]: ExtractRenderableEntry<T[k]>;
   }>;
 
-  export type Renderables<
+  export type RenderablesFactory<
     T,
     Picked extends
-      keyof ExtractRenderableSnippets<T> = keyof ExtractRenderableSnippets<T>,
+      keyof ExtractRenderableEntries<T> = keyof ExtractRenderableEntries<T>,
   > = (
     render: typeof renderableSnippet
-  ) => Expand<Pick<ExtractRenderableSnippets<T>, Picked>>;
+  ) => Expand<Pick<ExtractRenderableEntries<T>, Picked>>;
 
   export type WithRenderables<T> = Expand<{
-    renderables: Renderables<T>;
+    renderables: RenderablesFactory<T>;
   }>;
 
-  export type NoRequiredRenderables<T> =
-    RequiredKeys<ExtractRenderableSnippets<T>> extends never ? true : false;
-
   export type InitialRenderables<T> =
-    NoRequiredRenderables<T> extends true
-      ? Maybe<Partial<WithRenderables<T>>>
+    RequiredKeys<ExtractRenderableEntries<T>> extends never
+      ? Maybe<WithRenderables<T>>
       : WithRenderables<T>;
 
-  function init<T>(target: T, source: InitialRenderables<T>): void {
+  const init = <T,>(target: T, source: InitialRenderables<T>) => {
     const values = source?.renderables?.(renderableSnippet);
     if (!values) return;
     for (const key in values) {
@@ -285,26 +281,25 @@
       ] as RenderableSnippet<any>;
       entry.set(() => value);
     }
-  }
+  };
 
-  const required = (render: typeof renderableSnippet<any>) =>
+  /**
+   * A sentinel value that can be passed as the second argument to `renderable`
+   * when it is a class property, to indicate that the renderable is required
+   * and must be provided to the constructor.
+   * @param render
+   */
+  const required = <T = RenderableSnippet<any>,>(
+    render: typeof renderableSnippet<any>
+  ) =>
     render({
       snippet: requiredPlaceholder,
-    }) as RenderableSnippet<any>;
+    }) as T;
 
-  const staticMethods = {
+  export const renderable = Object.assign(_renderable, {
     init,
     required,
-  } as const;
-
-  export const renderable = Object.assign(
-    _renderable,
-    staticMethods as typeof staticMethods & {
-      Types: {
-        Init: typeof init;
-      };
-    }
-  );
+  });
 
   export type RenderableContent =
     | RenderableSnippet<any>
@@ -314,9 +309,10 @@
 
   export { renderer };
 
-  export type RenderSnippetWithProp<T> = (
-    prop: T
-  ) => RenderSnippet<RenderableSnippet<T>>;
+  const noProp = <TProp extends unknown | undefined>(
+    snippet: Snippet<[TProp]> | Snippet<[]>,
+    prop: TProp
+  ): snippet is Snippet<[]> => prop === undefined;
 </script>
 
 <script lang="ts" generics="TSnippetProp extends unknown | undefined">
@@ -335,8 +331,8 @@
 {/if}
 
 {#snippet requiredPlaceholder()}
-  {@const _ = console.error(
-    "A required snippet was rendered without providing the necessary snippet."
+  {console.error(
+    "A required snippet was rendered without first being `set` on the renderable."
   )}
   Error: Required snippet not provided
 {/snippet}

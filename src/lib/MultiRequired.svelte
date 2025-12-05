@@ -1,6 +1,6 @@
 <script lang="ts" module>
   import { renderable, renderer, type InitialRenderables } from "../../release";
-  import type { ExtractRenderableSnippets } from "../../release/SnippetRenderer.svelte";
+  import type { ExtractRenderableEntries } from "../../release/SnippetRenderer.svelte";
 
   export class Model {
     /**
@@ -9,14 +9,7 @@
      * */
     items = renderable("multi", renderable.required);
 
-    /**
-     * @param initial Is not required (thus the `?`) since `multi` renderables
-     * will default to an empty array if not explicitly provided
-     * (NOTE: this is different from `single` required renderables).
-     *
-     * However, it's recommended to require it for clarity,
-     */
-    constructor(initial: InitialRenderables<Model, "items">) {
+    constructor(initial: InitialRenderables<Model>) {
       renderable.init(this, initial);
     }
   }

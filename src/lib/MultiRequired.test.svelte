@@ -8,7 +8,9 @@
   body={async ({ set }) => {
     set({
       model: new Model({
-        renderables: (render) => ({}),
+        renderables: (render) => ({
+          items: [],
+        }),
       }),
     });
   }}
@@ -46,7 +48,7 @@
     <button onclick={() => items.append((render) => render(withProps, 3))}>
       Add with props (cubed)
     </button>
-    <button onclick={() => items.set((_) => [])}> Reset </button>
+    <button onclick={() => items.unset()}> Reset </button>
     <MultiRequired {model} />
   {/snippet}
 </Sweater>
