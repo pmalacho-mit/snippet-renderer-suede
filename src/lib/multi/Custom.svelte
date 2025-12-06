@@ -1,18 +1,15 @@
 <script lang="ts" module>
-  import {
-    renderable,
-    renderer,
-    type RenderableSnippet,
-    type InitialRenderables,
-  } from "../../../release";
+  import { renderable, renderer } from "../../../release";
+
+  export type Custom = {
+    title: string;
+    renderable: renderable.Snippet;
+  };
 
   export class Model {
-    items = renderable<{ title: string; renderable: RenderableSnippet }>(
-      "multi",
-      renderable.required
-    );
+    readonly items = renderable<Custom>("multi", renderable.required);
 
-    constructor(initial: InitialRenderables<Model>) {
+    constructor(initial: renderable.Initial<Model>) {
       renderable.init(this, initial);
     }
   }

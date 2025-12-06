@@ -1,9 +1,5 @@
 <script lang="ts" module>
-  import {
-    renderable,
-    renderer,
-    type InitialRenderables,
-  } from "../../../release";
+  import { renderable, renderer } from "../../../release";
 
   export class Model {
     /**
@@ -12,7 +8,7 @@
      * */
     item = renderable("single", renderable.required);
 
-    constructor(initial: InitialRenderables<Model>) {
+    constructor(initial: renderable.Initial<Model>) {
       renderable.init(this, initial);
     }
   }

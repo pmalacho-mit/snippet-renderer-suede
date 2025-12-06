@@ -17,7 +17,7 @@
    *
    * Ensures type safety when rendering snippets that may or may not require props.
    */
-  export type RenderableSnippet<Prop extends unknown | undefined = any> =
+  export type RenderableSnippet<Prop extends unknown | undefined> =
     Prop extends undefined
       ? { snippet: Snippet<[]>; prop?: never }
       : { snippet: Snippet<[Prop]>; prop: Prop };
@@ -262,7 +262,7 @@
     render: typeof renderableSnippet
   ) => Expand<Pick<ExtractRenderableEntries<T>, Picked>>;
 
-  export type WithRenderables<T> = Expand<{
+  type WithRenderables<T> = Expand<{
     renderables: RenderablesFactory<T>;
   }>;
 
@@ -283,12 +283,6 @@
     }
   };
 
-  /**
-   * A sentinel value that can be passed as the second argument to `renderable`
-   * when it is a class property, to indicate that the renderable is required
-   * and must be provided to the constructor.
-   * @param render
-   */
   const required = <T = RenderableSnippet<any>,>(
     render: typeof renderableSnippet<any>
   ) =>
@@ -297,7 +291,19 @@
     }) as T;
 
   export const renderable = Object.assign(_renderable, {
+    /**
+     * Initialize the renderables on a target object using the provided initial renderables.
+     * @param target The target object containing renderable properties to initialize.
+     * @param source An object containing a `renderables` property,
+     * which is a function that returns the initial values for the renderables of the target.
+     */
     init,
+    /**
+     * A sentinel value that can be passed as the second argument to `renderable`
+     * when it initializes a class property, to indicate that the renderable is required
+     * and must be `set` via the constructor (see `renderable.init`).
+     * @param render
+     */
     required,
   });
 

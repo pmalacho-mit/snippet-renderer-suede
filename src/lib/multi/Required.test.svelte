@@ -19,6 +19,25 @@
     {@const { model } = pocket}
     {@const { items } = model}
 
+    <!-- BEGIN: Buttons to manipulate items -->
+    <button
+      onclick={() =>
+        items.append((render) => render(` ${items.current.length + 1}`))}
+    >
+      Add raw number
+    </button>
+    <button onclick={() => items.append((render) => render(noProps))}>
+      Add no props (squared)
+    </button>
+    <button onclick={() => items.append((render) => render(withProps, 3))}>
+      Add with props (cubed)
+    </button>
+    <button onclick={() => items.unset()}> Reset </button>
+    <!-- END: Buttons to manipulate items -->
+
+    <MultiRequired {model} />
+
+    <!-- BEGIN: Snippets render via the component -->
     {#snippet withProps(exponent: number)}
       {@const current = untrack(() => items.current.length)}
       {@const result = Math.pow(current, exponent)}
@@ -35,20 +54,6 @@
     {#snippet noProps()}
       {@render withProps(2)}
     {/snippet}
-
-    <button
-      onclick={() =>
-        items.append((render) => render(` ${items.current.length + 1}`))}
-    >
-      Add raw number
-    </button>
-    <button onclick={() => items.append((render) => render(noProps))}>
-      Add no props (squared)
-    </button>
-    <button onclick={() => items.append((render) => render(withProps, 3))}>
-      Add with props (cubed)
-    </button>
-    <button onclick={() => items.unset()}> Reset </button>
-    <MultiRequired {model} />
+    <!-- END: Snippets render via the component -->
   {/snippet}
 </Sweater>

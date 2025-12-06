@@ -5,16 +5,15 @@
 
 <Sweater
   body={async ({ set }) => {
-    set({
-      model: new Model({
-        renderables: (render) => ({
-          items: {
-            title: "Initial title",
-            renderable: render("<strong>Initial content</strong>"),
-          },
-        }),
+    const model = new Model({
+      renderables: (render) => ({
+        items: {
+          title: "Initial title",
+          renderable: render("<strong>Initial content</strong>"),
+        },
       }),
     });
+    set({ model });
   }}
 >
   {#snippet vest({ model }: { model: Model })}

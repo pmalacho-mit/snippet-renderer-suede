@@ -1,18 +1,15 @@
 <script lang="ts" module>
-  import {
-    renderable,
-    renderer,
-    type InitialRenderables,
-  } from "../../../release";
+  import { renderable, renderer } from "../../../release";
 
   export class Model {
     /**
      * Utilize the `renderable.required` sentinel
-     * to indicate this renderable should be provided to the constructor.
+     * to indicate this renderable should be `set` via the constructor
+     * (using `renderable.init`).
      * */
-    items = renderable("multi", renderable.required);
+    readonly items = renderable("multi", renderable.required);
 
-    constructor(initial: InitialRenderables<Model>) {
+    constructor(initial: renderable.Initial<Model>) {
       renderable.init(this, initial);
     }
   }
