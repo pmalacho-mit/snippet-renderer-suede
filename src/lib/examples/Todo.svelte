@@ -1,6 +1,8 @@
 <script lang="ts">
-  type Todo = {
-    text: string;
+  import { renderer, renderable } from "../../../release";
+  type Todo<T> = {
+    content: renderer.Content;
+    editing: boolean;
     done: boolean;
   };
   type Filters = "all" | "active" | "completed";
@@ -9,15 +11,6 @@
   let filter = $state<Filters>("all");
   let filteredTodos = $derived(filterTodos());
 
-  $effect(() => {
-    const savedTodos = localStorage.getItem("todos");
-    savedTodos && (todos = JSON.parse(savedTodos));
-  });
-
-  $effect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  });
-
   function addTodo(event: KeyboardEvent) {
     if (event.key !== "Enter") return;
 
@@ -25,7 +18,7 @@
     const text = todoEl.value;
     const done = false;
 
-    todos = [...todos, { text, done }];
+    todos.push({ content: text, done, editing: false });
 
     todoEl.value = "";
   }
@@ -33,7 +26,7 @@
   function editTodo(event: Event) {
     const inputEl = event.target as HTMLInputElement;
     const index = +inputEl.dataset.index!;
-    todos[index].text = inputEl.value;
+    todos[index].content = inputEl.value;
   }
 
   function toggleTodo(event: Event) {
@@ -67,7 +60,27 @@
 <div class="todos">
   {#each filteredTodos as todo, i}
     <div class:completed={todo.done} class="todo">
-      <input oninput={editTodo} data-index={i} value={todo.text} type="text" />
+      {#if todo.editing}
+        {#if typeof todo.content === "string"}
+          <input
+            oninput={editTodo}
+            data-index={i}
+            value={todo.content}
+            type="text"
+          />
+        {:else}
+          {@render renderer(todo.content)}
+        {/if}
+      {:else}
+        <span
+          onclick={() => (todo.editing = true)}
+          onkeydown={() => (todo.editing = true)}
+          role="button"
+          tabindex="0"
+        >
+          {@render renderer(todo.content)}
+        </span>
+      {/if}
       <input
         onchange={toggleTodo}
         data-index={i}
@@ -102,7 +115,8 @@
     opacity: 0.4;
   }
 
-  input[type="text"] {
+  input[type="text"],
+  span {
     width: 100%;
     padding: 1rem;
   }
