@@ -19,5 +19,5 @@
 </script>
 
 <div>
-  {@render renderer(model.item.current)}
+  {@render renderer(model.item)}
 </div>

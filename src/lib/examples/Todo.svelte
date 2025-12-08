@@ -1,6 +1,6 @@
 <script lang="ts">
   import { renderer, renderable } from "../../../release";
-  type Todo<T> = {
+  type Todo = {
     content: renderer.Content;
     editing: boolean;
     done: boolean;

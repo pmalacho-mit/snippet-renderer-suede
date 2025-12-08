@@ -22,7 +22,7 @@
 (length: {model.items.current.length})
 
 <div>
-  {@render renderer(model.items.current)}
+  {@render renderer(model.items)}
 </div>
 
 <div>

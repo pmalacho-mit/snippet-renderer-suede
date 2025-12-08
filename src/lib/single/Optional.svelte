@@ -18,9 +18,7 @@
 
 <div>
   <em>Have you provided a renderable?</em> <strong>{text}</strong>
-  {#if model.item.current}
-    <div>
-      {@render renderer(model.item.current)}
-    </div>
-  {/if}
+  <div>
+    {@render renderer(model.item)}
+  </div>
 </div>
