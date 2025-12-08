@@ -67,7 +67,20 @@
       ? Maybe<Record<string, any>[]>
       : Maybe<Record<string, any>>,
   > = {
+    /**
+     * Discriminator indicating whether this renderable holds a single value (`"single"`)
+     * or multiple values (`"multi"`).
+     *
+     * This determines the type of the `current` property and available methods
+     * (i.e., whether or not `current` behaves as an array).
+     */
     readonly kind: K;
+    /**
+     * The current value of the renderable.
+     *
+     * For `"single"` renderables, this is either a `T` or `undefined` (if optional).
+     * For `"multi"` renderables, this is either an array of `T`s or `undefined` (if optional).
+     */
     get current(): T;
   } & (K extends "multi"
     ? {
@@ -101,6 +114,21 @@
               >
             | IfMaybe<T, undefined, never>
         ) => void;
+        /**
+         * Append one or more values to the current array of renderables.
+         *
+         * @param get A callback that accepts a `render` function and returns either a single value
+         * or an array of values to append. The value(s) will be added to the end of the current array.
+         *
+         * @example
+         * ```ts
+         * // Append a single value
+         * renderable.append((render) => render(text, "New item"));
+         *
+         * // Append multiple values
+         * renderable.append((render) => [render(text, "Item 1"), render(text, "Item 2")]);
+         * ```
+         */
         append: (
           get: (
             render: typeof renderableSnippet
@@ -118,12 +146,31 @@
         unset: () => void;
       }
     : {
+        /**
+         * Set the current value of the renderable. This will replace the current value with the new value.
+         *
+         * @param get A callback that accepts a `render` function as an argument, which can then be used
+         * to create a renderable snippet in a type-safe manner.
+         *
+         * @example
+         * ```ts
+         * renderable.set((render) => render(mySnippet, "Hello"));
+         * ```
+         */
         set: (
           get: (
             render: typeof renderableSnippet
           ) => T | IfMaybe<T, undefined, never>
         ) => void;
-      } & (undefined extends T ? { unset: () => void } : {}));
+      } & (undefined extends T
+        ? {
+            /**
+             * Unset the current value of the renderable, setting it to `undefined`.
+             * Only available for optional single renderables.
+             */
+            unset: () => void;
+          }
+        : {}));
 
   type Constraint = Record<string, any>;
   type Default = RenderableSnippet<any>;
@@ -311,6 +358,7 @@
     | RenderableSnippet<any>
     | Snippet<[]>
     | string
+    | Pick<Renderable<any, any>, "current">
     | RenderableContent[];
 
   export { renderer };
@@ -352,6 +400,10 @@
     {#each content as item}
       {@render renderer(item)}
     {/each}
+  {:else if "current" in content}
+    {#if content.current !== undefined}
+      {@render renderer(content.current)}
+    {/if}
   {:else}
     <Self {...content} />
   {/if}

@@ -17,6 +17,9 @@ import type {
  * - an array of the above renderable contents
  */
 export namespace renderer {
+  /**
+   * The type of the content that can be rendered by the `renderer` snippet.
+   */
   export type Content = RenderableContent;
 }
 
@@ -27,7 +30,60 @@ export namespace renderer {
  * - used as a namespace for types (`Initial`, `Snippet`, and `Example`)
  */
 export namespace renderable {
+  /**
+   * Type describing an object with a `renderables` factory function that produces initial values
+   * for a class's (or object's, more generally) `renderable` properties.
+   *
+   * Primarily used to ensure type safety when utilizing `renderable.init()`
+   * (e.g. `renderable.init(target, initial)` where `initial` is of type `renderable.Initial<typeof target>`).
+   *
+   * The factory function receives a `render` helper and returns an object mapping renderable property
+   * names to renderable snippet values (see `renderable.Snippet`). `renderable.init()` will then internally
+   * use this factory to initialize the renderable properties of the target object.
+   *
+   * If all renderables are optional, the entire `Initial`
+   * object becomes optional; if any renderable is required, `Initial` cannot be undefined.
+   *
+   * @example
+   * ```ts
+   * class Model {
+   *   item = renderable("single", renderable.required);
+   *
+   *   constructor(initial: renderable.Initial<Model>) {
+   *     renderable.init(this, initial);
+   *   }
+   * }
+   *
+   * const model = new Model({
+   *   renderables: render => ({
+   *     item: render(...)
+   *   })
+   * });
+   * ```
+   */
   export type Initial<T> = InitialRenderables<T>;
+
+  /**
+   * A record containing a Svelte snippet and its associated prop (if required).
+   *
+   * This type ensures type safety when working with snippets that may or may not require props.
+   * If `Prop` is `undefined`, the snippet requires no prop. Otherwise, the snippet requires
+   * the specified `Prop` type to be provided when rendering.
+   *
+   * Used as the props type for `SnippetRenderer` component and when `set`ting `renderable` properties.
+   *
+   * @example
+   * ```ts
+   * const noProps: renderable.Snippet<undefined> = {
+   *   snippet: mySnippet,
+   * };
+   *
+   * const withProp: renderable.Snippet<string> = {
+   *   snippet: mySnippet,
+   *   prop: "hello"
+   * };
+   * ```
+   */
   export type Snippet<Prop extends unknown | undefined = any> =
     RenderableSnippet<Prop>;
 
