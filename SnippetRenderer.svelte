@@ -374,15 +374,15 @@
   let { snippet, prop }: RenderableSnippet<TSnippetProp> = $props();
 </script>
 
-{#snippet html(content: string)}
-  {@html content}
-{/snippet}
-
 {#if noProp(snippet, prop)}
   {@render snippet()}
 {:else}
   {@render snippet(prop)}
 {/if}
+
+{#snippet html(content: string)}
+  {@html content}
+{/snippet}
 
 {#snippet requiredPlaceholder()}
   {console.error(
