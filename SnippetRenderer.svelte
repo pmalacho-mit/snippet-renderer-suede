@@ -172,8 +172,8 @@
           }
         : {}));
 
-  export type Constraint = Record<string, any>;
-  export type DefaultConstraint = RenderableSnippet<any>;
+  type Constraint = Record<string, any>;
+  type Default = RenderableSnippet<any>;
 
   const valueFromMulti = <T extends Maybe<SingleOrArray<any>>>(value: T) =>
     Array.isArray(value) ? value : value !== undefined ? [value] : undefined;
@@ -183,7 +183,7 @@
    * @overload
    * @param kind specify that this is a `"single"` renderable
    */
-  function _renderable<T extends Constraint = DefaultConstraint>(
+  function _renderable<T extends Constraint = Default>(
     kind: "single"
   ): Expand<Renderable<"single", Maybe<T>>>;
   /**
@@ -192,7 +192,7 @@
    * @param kind specify that this is a `"single"` renderable
    * @param initial A callback that returns the initial value of the renderable
    */
-  function _renderable<T extends Constraint = DefaultConstraint>(
+  function _renderable<T extends Constraint = Default>(
     kind: "single",
     initial: (render: typeof renderableSnippet) => T
   ): Expand<Renderable<"single", T>>;
@@ -201,7 +201,7 @@
    * @overload
    * @param kind specify that this is a `"multi"` renderable
    */
-  function _renderable<T extends Constraint = DefaultConstraint>(
+  function _renderable<T extends Constraint = Default>(
     kind: "multi"
   ): Expand<Renderable<"multi", Maybe<T[]>>>;
   /**
@@ -211,7 +211,7 @@
    * @param kind specify that this is a `"multi"` renderable
    * @param initial A callback that returns the initial value of the renderable
    */
-  function _renderable<T extends Constraint = DefaultConstraint>(
+  function _renderable<T extends Constraint = Default>(
     kind: "multi",
     initial: (render: typeof renderableSnippet) => SingleOrArray<T>
   ): Expand<Renderable<"multi", T[]>>;
